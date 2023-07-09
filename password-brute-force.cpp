@@ -6,6 +6,8 @@
 // Windows: https://sourceforge.net/projects/libssl/files/latest/download herunterladen und in den Ordner zur cpp Datei legen
 #include <openssl/sha.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <math.h>
 
 using namespace std;
 
@@ -13,13 +15,17 @@ clock_t beginClock;
 clock_t endClock;
 bool foundPassword = false;
 
+time_t beginTime;
+time_t endTime;
+
+double cntAttempts = 0;
+
 enum Kind
 {
     num,
     alpha,
     alphanumspecial
 };
-Kind kind = alpha;
 
 // Funktion von https://terminalroot.com/how-to-generate-sha256-hash-with-cpp-and-openssl/
 string sha256(const string str)
@@ -44,50 +50,62 @@ static const char alphabet_num[] = "0123456789";
 
 static const char alphabet_alpha[] = "abcdefghijklmnopqrstuvwxyz";
 
-//static const char alphabet_alphanumspecial[] =
-static const char alphabet[] =
-"abcdefghijklmnopqrstuvwxyz"
-"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-"0123456789";
+static const char alphabet_alphanumspecial[] =
+    "abcdefghijklmnopqrstuvwxyz"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "0123456789";
 
-/*static const char alphabet[] =
-    "abcdefg";
-    */
+int alphabetSize;
 
-int alphabetSize = sizeof(alphabet) - 1;
-
-void bruteImpl(char *str, int index, int maxDepth, string password)//, char alphabet[])
+void bruteImpl(char *str, int index, int maxDepth, string password, Kind kind, bool verbose)
 {
     for (int i = 0; i < alphabetSize && foundPassword == false; ++i)
     {
-        str[index] = alphabet[i];
-
-        if (index == maxDepth - 1)
+        switch (kind)
         {
-            // printf("%s\n", str);
+        case num:
+            str[index] = alphabet_num[i];
+            break;
+        case alpha:
+            str[index] = alphabet_alpha[i];
 
+        case alphanumspecial:
+            str[index] = alphabet_alphanumspecial[i];
+
+        default:
+            str[index] = alphabet_alphanumspecial[i];
+        }
+        cntAttempts++;
+        if (index == maxDepth - 1)
+        {    
+            if (verbose)
+            {
+                printf("%s\n", str);
+            }
             if (sha256(str) == sha256(password))
             {
                 cout << endl
                      << "YESS" << str << sha256(password);
                 endClock = clock();
+                endTime = time(NULL);
                 cout << "bruteimpl" << clock() << endl;
                 foundPassword = true;
             }
         }
-        else
-            bruteImpl(str, index + 1, maxDepth, password);//, alphabet);
+        else {
+            bruteImpl(str, index + 1, maxDepth, password, kind, verbose);
+            }
     }
 }
 
-void bruteSequential(int maxLen, string password)//, char alphabet[])
+void bruteSequential(int maxLen, string password, Kind kind, bool verbose)
 {
     char *buf = (char *)malloc(maxLen + 1);
 
     for (int i = 1; i <= maxLen; ++i)
     {
         memset(buf, 0, maxLen + 1);
-        bruteImpl(buf, 0, i, password);//, alphabet);
+        bruteImpl(buf, 0, i, password, kind, verbose);
     }
 
     free(buf);
@@ -95,59 +113,55 @@ void bruteSequential(int maxLen, string password)//, char alphabet[])
 
 int main(int argc, char *argv[])
 {
-    if (argc < 2)
+    if (argc < 3)
     {
-        fprintf(stderr, "Usage: %s password\n", argv[0]);
+        fprintf(stderr, "Usage: %s password alphabet [num, alpha, alphanumspecial], [verbose 1/0]\n", argv[0]);
+        fprintf(stderr, "Usage Exmaple: %s myPasswd alpha 0\n", argv[0]);
+        return -1;
     }
     string password = argv[1];
     int length = password.length();
+    bool verbose = false;
 
-    char alphabet2 = *alphabet;
-    int alphabetSize = sizeof(alphabet)/sizeof(char);
-    cout << alphabetSize;
-    /*
+    // cout << "kind" << argv[2];
+    // cout << "verbose" << argv[3];
+    Kind kind;
+    if (strcmp(argv[2], "num") == 0)
+    {
+        kind = num;
+        alphabetSize = sizeof(alphabet_num) - 1;
+    }
+    else if (strcmp(argv[2], "alpha") == 0)
+    {
+        kind = alpha;
+        alphabetSize = sizeof(alphabet_alpha) - 1;
+    }
+    else
+    {
+        kind = alphanumspecial;
+        alphabetSize = sizeof(alphabet_alphanumspecial) - 1;
+    }
 
-    cout << "length:" <<length << endl;
+    verbose = argc > 2 ? argv[3] : 0;
+
+    cout << "length: " << length << endl;
+    cout << "kind: " << kind << endl;
+    cout << "verbose: " << verbose << endl;
 
     beginClock = clock();
+    beginTime = time(NULL);
 
-    bruteSequential(length, password);//, &alphabet_num);
-    cout << beginClock << endl;
-    cout << endClock << endl;
-    cout << CLOCKS_PER_SEC << endl;
-    cout << (double)(endClock - beginClock) / CLOCKS_PER_SEC << endl;
-*/
-    /*
+    bruteSequential(length, password, kind, verbose);
 
-        // Einlesen
-        cout << "Enter Password" << endl;
-        string password;
-        string hash;
+    // cout << beginClock << endl;
+    // cout << endClock << endl;
+    // cout << CLOCKS_PER_SEC << endl;
+    double timeSeconds = (double)(endClock - beginClock) / CLOCKS_PER_SEC;
+    double attemptsPerSecond = pow(alphabetSize, password.length());
 
-        getline(cin, password);
-        cout << password << '\t' << sha256(password) << '\n';
-
-        // Berechnen:
-        double estimatedTime;
-
-        // char startASCII = 33; // '!'
-        // char endASCII = 126; // '~'
-
-        char startASCII = 'a';
-        char endASCII = 'c';
-
-        // Bruteforce durchführen und Zeit messen: wir zählen die Clock Cycles und teilen durch Cycles / s
-        clock_t beginClock = clock();
-        clock_t endClock;
-
-        int maxLength = 4;
-
-        string foundPassword = bruteForce(hash, maxLength, startASCII, endASCII);
-        cout << "Entered password:" << '\t' << "Found password: " << foundPassword << '\t' << "Hash: " << hash;
-
-        endClock = clock();
-        cout << (double)(endClock - beginClock) / CLOCKS_PER_SEC << endl;
-        */
+    cout << "I needed " << timeSeconds << " seconds to crack" << endl;
+    cout << "I tried somewhat " << cntAttempts / timeSeconds << " attempts per second "<< "(attempts:" << cntAttempts << ")" << endl;
+    //cout << cntAttempts << endl;
 
     return 0;
 }
