@@ -75,9 +75,9 @@ void bruteImpl(char *str, int index, int maxDepth, string password, Kind kind, b
         default:
             str[index] = alphabet_alphanumspecial[i];
         }
-        cntAttempts++;
         if (index == maxDepth - 1)
-        {    
+        {
+            cntAttempts++;
             if (verbose)
             {
                 printf("%s\n", str);
@@ -85,16 +85,18 @@ void bruteImpl(char *str, int index, int maxDepth, string password, Kind kind, b
             if (sha256(str) == sha256(password))
             {
                 cout << endl
-                     << "YESS" << str << sha256(password);
+                     << "Found a match" << endl;
+                cout << "sha(" << str << ") -> " << sha256(password);
                 endClock = clock();
                 endTime = time(NULL);
                 cout << "bruteimpl" << clock() << endl;
                 foundPassword = true;
             }
         }
-        else {
+        else
+        {
             bruteImpl(str, index + 1, maxDepth, password, kind, verbose);
-            }
+        }
     }
 }
 
@@ -104,7 +106,7 @@ void bruteSequential(int maxLen, string password, Kind kind, bool verbose)
 
     for (int i = 1; i <= maxLen; ++i)
     {
-        memset(buf, 0, maxLen + 1);
+        // memset(buf, 0, maxLen + 1);
         bruteImpl(buf, 0, i, password, kind, verbose);
     }
 
@@ -160,8 +162,9 @@ int main(int argc, char *argv[])
     double attemptsPerSecond = pow(alphabetSize, password.length());
 
     cout << "I needed " << timeSeconds << " seconds to crack" << endl;
-    cout << "I tried somewhat " << cntAttempts / timeSeconds << " attempts per second "<< "(attempts:" << cntAttempts << ")" << endl;
-    //cout << cntAttempts << endl;
+    cout << "I tried somewhat " << cntAttempts / timeSeconds << " attempts per second "
+         << "(attempts:" << cntAttempts << ")" << endl;
+    // cout << cntAttempts << endl;
 
     return 0;
 }
