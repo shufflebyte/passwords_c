@@ -3,6 +3,7 @@ Wie man das Programm benutzt:
 * (optional) Generiere Hash den du suchen cracken willst: echo -n abc | shasum -a 256 | awk '{ print $1 }'
 * Formuliere Argumente: ./password-brute-force2.o ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad alpha 3 1
 Boom!
+Programm kompilieren: g++ password-brute-force2.cpp -o password-brute-force2.o -lcrypto
 */
 
 #include <stdlib.h>
@@ -25,6 +26,7 @@ const int MAX_PWD_LENGTH = 10;
 
 string searchedHash;
 Alphabet alphabet = num;
+int alphabetLength = 10;
 int passwordLength = MAX_PWD_LENGTH;
 bool verbose = true;
 char startChar = 'a';
@@ -51,14 +53,17 @@ int parseArguments(int argc, char *argv[])
     if (strcmp(argv[2], "num") == 0)
     {
         alphabet = num;
+        alphabetLength = 10; // 0..9
     }
     else if (strcmp(argv[2], "alpha") == 0)
     {
         alphabet = alpha;
+        alphabetLength = 'z' - 'a' + 1;
     }
     else
     {
         alphabet = alphanumspecial;
+        alphabetLength = '~' - '!' + 1; // vgl ASCII-Tabelle
     }
 
     passwordLength = argc > 3 ? atoi(argv[3]) : MAX_PWD_LENGTH;
@@ -311,8 +316,9 @@ int main(int argc, char *argv[])
 
     endClock = clock();
     double timeSeconds = (double)(endClock - beginClock) / CLOCKS_PER_SEC;
-    // double attemptsPerSecond = pow(alphabetSize, password.length());
+    double maxAttempts = pow(alphabetLength, passwordLength);
 
+    cout << "You gave me a passwordLength of " << passwordLength << ". There where " << maxAttempts << " possible passwords" << endl;
     cout << "I needed " << timeSeconds << " seconds to crack" << endl;
     cout << "I tried somewhat " << cntAttempts / timeSeconds << " attempts per second "
          << "(attempts:" << cntAttempts << ")" << endl;
