@@ -3,7 +3,8 @@ Wie man das Programm benutzt:
 * (optional) Generiere Hash den du suchen cracken willst: echo -n abc | shasum -a 256 | awk '{ print $1 }'
 * Formuliere Argumente: ./password-brute-force2.o ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad alpha 3 1
 Boom!
-Programm kompilieren: g++ password-brute-force2.cpp -o password-brute-force2.o -lcrypto
+Programm kompilieren MacOS: g++ password-brute-force2.cpp -o password-brute-force2.o -lcrypto
+Programm kompilieren Wind: g++ password-brute-force2.cpp -o password-brute-force2.exe -lcrypto
 */
 
 #include <stdlib.h>
