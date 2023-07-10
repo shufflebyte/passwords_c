@@ -89,7 +89,7 @@ void bruteImpl(char *str, int index, int maxDepth, string password, Kind kind, b
                 cout << "sha(" << str << ") -> " << sha256(password);
                 endClock = clock();
                 endTime = time(NULL);
-                cout << "bruteimpl" << clock() << endl;
+
                 foundPassword = true;
             }
         }
