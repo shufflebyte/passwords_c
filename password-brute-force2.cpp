@@ -1,5 +1,17 @@
+/*
+Wie man das Programm benutzt:
+* (optional) Generiere Hash den du suchen cracken willst: echo -n abc | shasum -a 256 | awk '{ print $1 }'
+* Formuliere Argumente: ./password-brute-force2.o ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad alpha 3 1
+Boom!
+*/
+
 #include <stdlib.h>
 #include <iostream>
+
+// sha256
+#include <openssl/sha.h>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -18,14 +30,19 @@ bool verbose = true;
 char startChar = 'a';
 char endChar = 'z';
 
+clock_t beginClock;
+clock_t endClock;
+
+double cntAttempts = 0;
+
 /* Command-Line Arguments richtig einlesen */
 int parseArguments(int argc, char *argv[])
 {
     if (argc < 3)
     {
         cerr << "Usage: \t\t\t" << argv[0] << " hash alphabet [passwordLength] [verbose]\n";
-        cerr << "Usage Exmaple:\t\t" << argv[0] << " 123abebfb3b5bdb3 alpha 5 0\n";
-        cerr << "Minimum Exmaple:\t" << argv[0] << " 123abebfb3b5bdb3 alpha\n";
+        cerr << "Usage Exmaple:\t\t" << argv[0] << " 6304fbfe2b22557c34c42a70056616786a733b3d09fb326308c813d6ab712ec0 alpha 5 0\n";
+        cerr << "Minimum Exmaple:\t" << argv[0] << " 6304fbfe2b22557c34c42a70056616786a733b3d09fb326308c813d6ab712ec0 alpha\n";
         return 1;
     }
 
@@ -53,15 +70,28 @@ int parseArguments(int argc, char *argv[])
     return 0;
 }
 
-/* zu ersetzen!*/
-string sha256(string word)
+// Funktion von https://terminalroot.com/how-to-generate-sha256-hash-with-cpp-and-openssl/
+string sha256(const string str)
 {
+    unsigned char hash[SHA256_DIGEST_LENGTH];
 
-    return word;
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, str.c_str(), str.size());
+    SHA256_Final(hash, &sha256);
+
+    stringstream ss;
+
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+    {
+        ss << hex << setw(2) << setfill('0') << static_cast<int>(hash[i]);
+    }
+    return ss.str();
 }
 
 bool check(string word)
 {
+    cntAttempts += 1;
     if (verbose)
     {
         for (int i = 0; i < passwordLength; i++)
@@ -248,6 +278,8 @@ int main(int argc, char *argv[])
     }
     cout << "Beginne Suche..." << endl;
 
+    beginClock = clock();
+
     // brute force
     switch (passwordLength)
     {
@@ -273,8 +305,17 @@ int main(int argc, char *argv[])
         bruteForce9();
         break;
     default:
-        cout << "Wird nicht unterstützt, nur 3 bis 10";
+        cout << "Wird nicht unterstützt, nur 3 bis 9";
         break;
     }
+
+    endClock = clock();
+    double timeSeconds = (double)(endClock - beginClock) / CLOCKS_PER_SEC;
+    // double attemptsPerSecond = pow(alphabetSize, password.length());
+
+    cout << "I needed " << timeSeconds << " seconds to crack" << endl;
+    cout << "I tried somewhat " << cntAttempts / timeSeconds << " attempts per second "
+         << "(attempts:" << cntAttempts << ")" << endl;
+
     return 0;
 }
