@@ -15,6 +15,9 @@ Programm kompilieren Wind: g++ password-brute-force2.cpp -o password-brute-force
 #include <sstream>
 #include <iomanip>
 
+#include <math.h>
+#include <string.h>
+
 using namespace std;
 
 const int MAX_PWD_LENGTH = 10;
@@ -59,8 +62,8 @@ int parseArguments(int argc, char *argv[])
     else
     {
         alphabetLength = '~' - '!' + 1; // vgl ASCII-Tabelle
-        startChar = '~';
-        endChar = '!';
+        startChar = '!';
+        endChar = '~';
     }
 
     passwordLength = argc > 3 ? atoi(argv[3]) : MAX_PWD_LENGTH;
