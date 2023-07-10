@@ -16,16 +16,9 @@ Programm kompilieren: g++ password-brute-force2.cpp -o password-brute-force2.o -
 
 using namespace std;
 
-enum Alphabet
-{
-    num,
-    alpha,
-    alphanumspecial
-};
 const int MAX_PWD_LENGTH = 10;
 
 string searchedHash;
-Alphabet alphabet = num;
 int alphabetLength = 10;
 int passwordLength = MAX_PWD_LENGTH;
 bool verbose = true;
@@ -52,25 +45,28 @@ int parseArguments(int argc, char *argv[])
 
     if (strcmp(argv[2], "num") == 0)
     {
-        alphabet = num;
         alphabetLength = 10; // 0..9
+        startChar = '0';
+        endChar = '9';
     }
     else if (strcmp(argv[2], "alpha") == 0)
     {
-        alphabet = alpha;
         alphabetLength = 'z' - 'a' + 1;
+        startChar = 'a';
+        endChar = 'z';
     }
     else
     {
-        alphabet = alphanumspecial;
         alphabetLength = '~' - '!' + 1; // vgl ASCII-Tabelle
+        startChar = '~';
+        endChar = '!';
     }
 
     passwordLength = argc > 3 ? atoi(argv[3]) : MAX_PWD_LENGTH;
     verbose = argc > 4 ? atoi(argv[4]) : false;
 
     if (verbose)
-        cout << searchedHash << alphabet << passwordLength << verbose;
+        cout << searchedHash << passwordLength << verbose;
 
     return 0;
 }
